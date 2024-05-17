@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { asyncHandle } from "./utils/asyncHandle.js";
 
 const app = express();
 
@@ -20,5 +19,12 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 //using cookie parser package to store and access cookies of client browser from server
 
 app.use(cookieParser());
+
+//import routes
+import userRouter from "./routes/users.routes.js";
+
+//routes declaration
+//we  are using router from another file so we use middleware
+app.use("/api/v1/users", userRouter);
 
 export { app };
