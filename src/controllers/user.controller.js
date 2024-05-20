@@ -23,7 +23,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // checks if user already exist with given username or email
 
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   });
   if (existedUser) {
@@ -32,10 +32,18 @@ const registerUser = asyncHandler(async (req, res) => {
 
   //handling images
   const avatarlocalPath = req.files?.avatar[0]?.path;
-  const coverImagelocalPath = req.files?.coverImage[0]?.path;
+  // const coverImagelocalPath = req.files?.coverImage[0]?.path;
 
   if (!avatarlocalPath) {
     throw new ApiError(400, "Avatar is required");
+  }
+  let coverImagelocalPath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverImagelocalPath = req.files?.coverImage[0]?.path;
   }
 
   // uploading files to cloudinary
@@ -53,7 +61,7 @@ const registerUser = asyncHandler(async (req, res) => {
     coverImage: coverImage?.url || "",
     email,
     password,
-    username: username.toLoweCase(),
+    username: username ? username?.toLowerCase() : null,
   });
 
   // removing password and refreshToken  from response so that it cannot be accessed in frontend

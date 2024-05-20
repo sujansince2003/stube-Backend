@@ -47,7 +47,6 @@ const userSchema = new Schema(
     },
     refreshToken: {
       type: String,
-      required: true, // Must be present
     },
   },
   { timestamps: true } // Automatically add createdAt and updatedAt fields
