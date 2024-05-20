@@ -34,7 +34,6 @@ const userSchema = new Schema(
     },
     coverImage: {
       type: String, // URL to the user's cover image
-      required: true, // Must be present
     },
     watchHistory: [
       {
@@ -60,7 +59,7 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   // Hash the password using bcrypt
-  this.password = bcrypt.hashSync(this.password, 10);
+  this.password = await bcrypt.hashSync(this.password, 10);
 
   // Proceed to the next middleware
   next();
