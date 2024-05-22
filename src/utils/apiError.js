@@ -20,3 +20,5 @@ class ApiError extends Error {
 }
 
 export { ApiError };
+
+// when i use this class it can be caught by catch block in try catch syntax
