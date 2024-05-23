@@ -1,6 +1,11 @@
 import { Router } from "express";
-import { registerUser } from "../controllers/user.controller.js";
+import {
+  loginUser,
+  logoutUser,
+  registerUser,
+} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middlewares.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 /*just before calling  registerUser we call multer upload middleware
@@ -15,6 +20,7 @@ const router = Router();
  3.Continuing to Next Middleware/Route Handler:
   After processing the files, Multer passes control to the next middleware function in line, which is registerUser in this case. At this point, the files are already processed and stored, so registerUser can proceed without needing to handle file uploads itself.  */
 
+//for registering user
 router.route("/register").post(
   upload.fields([
     { name: "avatar", maxCount: 1 }, //use same name in formfield in frontend
@@ -23,5 +29,11 @@ router.route("/register").post(
 
   registerUser
 );
+
+//for user login
+
+router.route("/login").post(loginUser);
+
+router.route("/logout").post(verifyJWT, logoutUser);
 
 export default router;
