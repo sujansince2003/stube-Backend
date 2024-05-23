@@ -121,6 +121,35 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!ispasswordValid) {
     throw new ApiError(401, "password is incorrect");
   }
+
+  //refreshtoken and accesstoken by using method
+  const { refreshToken, accessToken } =
+    await generateRefreshtokenandAccesstoken(user._id);
+
+  // send data of user excluding password and refreshToken
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
+
+  // cookie procedure
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  // returning response
+  res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new apiResponse(
+        200,
+        { user: loggedInUser, refreshToken, accessToken },
+        "Loggedin success"
+      )
+    );
 });
 
 export { registerUser, loginUser };
