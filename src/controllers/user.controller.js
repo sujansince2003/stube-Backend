@@ -5,6 +5,26 @@ import { User } from "../models/user.model.js";
 import { uploadtocloudinary } from "../utils/cloudinaryFileUpload.js";
 import { apiResponse } from "../utils/apiResponse.js";
 
+//creating method to generaterefreshtokenandaccesstoken
+const generateRefreshtokenandAccesstoken = async (userId) => {
+  try {
+    const user = User.findById(userId);
+    const refreshToken = user.generateRefreshToken();
+    const accessToken = user.generateAccessToken();
+
+    //adding refreshtoken to user db
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    return { refreshToken, accessToken };
+  } catch (error) {
+    throw new ApiError(
+      500,
+      "Something went wrong while generating refresh and access token"
+    );
+  }
+};
+
 //creating function to register user
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -78,4 +98,29 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, createdUser, "User registered successfully"));
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email) {
+    throw new ApiError(400, "uesrname or email is required");
+  }
+  // finding the registered user (if)
+  const user = await User.findOne({
+    $or: [{ username }, { email }],
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User is not registered");
+  }
+
+  //now if we get the user data object in user object we can access methods we defined in user model like generateRefreshToken,isPasswordCorrect etc we dont use User  !!!!
+
+  //checking if password is correct
+
+  const ispasswordValid = await user.isPasswordCorrect(password);
+  if (!ispasswordValid) {
+    throw new ApiError(401, "password is incorrect");
+  }
+});
+
+export { registerUser, loginUser };
