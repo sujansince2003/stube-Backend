@@ -5,10 +5,15 @@ import { User } from "../models/user.model.js";
 import { uploadtocloudinary } from "../utils/cloudinaryFileUpload.js";
 import { apiResponse } from "../utils/apiResponse.js";
 
-//creating method to generaterefreshtokenandaccesstoken
+// creating method to generaterefreshtokenandaccesstoken
 const generateRefreshtokenandAccesstoken = async (userId) => {
   try {
-    const user = User.findById(userId);
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+      return;
+    }
+
     const refreshToken = user.generateRefreshToken();
     const accessToken = user.generateAccessToken();
 
@@ -20,7 +25,8 @@ const generateRefreshtokenandAccesstoken = async (userId) => {
   } catch (error) {
     throw new ApiError(
       500,
-      "Something went wrong while generating refresh and access token"
+      error.message ||
+        "Something went wrong while generating refresh and access token"
     );
   }
 };
