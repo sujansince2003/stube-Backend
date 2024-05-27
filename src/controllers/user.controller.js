@@ -326,6 +326,79 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     .status(200)
     .json(new apiResponse(200, user, "Cover Image updated Successfully"));
 });
+
+// writing mongodb aggregation pipelines
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+
+  if (!username?.trim()) {
+    throw new ApiError(400, "username is missing while fetching user data");
+  }
+  // now if we the username we can use User.find(username)  but we have better approach
+  const channel = await User.aggregate([
+    {
+      $match: {
+        username: username?.toLowerCase(), //match the username in database with the username we got from req.params
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions", //documents from which we wanna refer from  vakar User ma xu subscriptiosn wala ma join gar
+        localField: "_id", //The field from the documents in the User collection that the $lookup uses to perform the join.    User bata k match hanney
+        foreignField: "channel", //he field from the documents in the "subscriptions" collection that the $lookup matches against the localField       subscriptions collection ma gayera  local field lai k ma connect hanney
+        as: "subscribers", //The name of the new array field to add to the input documents. The output documents will include an additional field named "subscribers", which contains an array of matching documents from the "subscriptions" collection. If no matches are found, this field will be an empty array.
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers", //using $ because subscribers is now a  we got from first lookup operation
+        },
+        channelsSubscribedTo: {
+          $size: "$channel",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] }, //subscribers field vitra gayera subscriber vitra req.user?._id match xa ki nai check
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        email: 1,
+        subscribersCount: 1,
+        channelsSubscribedTo: 1,
+        isSubscribed: 1,
+        avatar: true,
+        coverImage: true,
+      },
+    },
+  ]);
+
+  if (!channel?.length) {
+    throw new ApiError(404, "channel doesnot exists");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new apiResponse(200, channel[0], "Channel data fetched successfully")
+    );
+});
+
 export {
   registerUser,
   loginUser,
@@ -336,4 +409,5 @@ export {
   updateAccountDetails,
   updateAvatar,
   updateCoverImage,
+  getUserChannelProfile,
 };
