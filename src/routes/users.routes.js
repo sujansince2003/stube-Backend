@@ -1,9 +1,16 @@
 import { Router } from "express";
 import {
+  changePassword,
+  getCurrentUser,
+  getUserChannelProfile,
+  getWatchHistory,
   loginUser,
   logoutUser,
   refreshAccessToken,
   registerUser,
+  updateAccountDetails,
+  updateAvatar,
+  updateCoverImage,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middlewares.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -27,7 +34,6 @@ router.route("/register").post(
     { name: "avatar", maxCount: 1 }, //use same name in formfield in frontend
     { name: "coverImage", maxCount: 1 },
   ]),
-
   registerUser
 );
 
@@ -37,5 +43,20 @@ router.route("/login").post(loginUser);
 
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refreshaccesstoken").post(refreshAccessToken);
+router.route("/changepassword").post(verifyJWT, changePassword);
+router.route("/getcurrentuser").get(verifyJWT, getCurrentUser);
+router.route("/updateaccount").patch(verifyJWT, updateAccountDetails); // when patch is ussed only specific details we defined in controller is updated but if use post all fields are updated
+
+router
+  .route("/updateavatar")
+  .patch(verifyJWT, upload.single("avatar"), updateAvatar);
+
+router
+  .route("/updatecoverimage")
+  .patch(verifyJWT, upload.single("coverImage"), updateCoverImage);
+
+router.route("/channelinfo/:username").get(verifyJWT, getUserChannelProfile);
+
+router.route("/history").get(verifyJWT, getWatchHistory);
 
 export default router;
